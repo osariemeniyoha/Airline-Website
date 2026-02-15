@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import Nigeria from '../assets/nigeria.avif'
+import Nigeria from '../assets/Nigeria.avif'
 import China from '../assets/china.avif'
 import London from '../assets/london.avif'
 import NewYork from '../assets/newyork.avif'
