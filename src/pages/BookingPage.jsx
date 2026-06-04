@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
+import Navbar from '../components/Navbar'
+import Footer from '../components/Footer'
 
 const Booking = () => {
   // Flight search state
@@ -231,8 +233,10 @@ const Booking = () => {
   }
 
   return (
-    <section className='pt-20 pb-16 bg-gray-50 min-h-screen'>
-      <div className='max-w-7xl mx-auto px-6'>
+    <>
+      <Navbar />
+      <section className='pt-24 pb-20 bg-gradient-to-b from-slate-50 to-slate-100 min-h-screen'>
+        <div className='max-w-7xl mx-auto px-6'>
         
         {/* Header */}
         <div className='text-center mb-12'>
@@ -781,7 +785,9 @@ const Booking = () => {
           </div>
         )}
       </div>
-    </section>
+      </section>
+      <Footer />
+    </>
   )
 }
 

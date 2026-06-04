@@ -26,20 +26,16 @@ const Hero = () => {
 
 
         <div className='flex flex-col sm:flex-row gap-4 mt-8 font-inter'>
-          
-          <button className='bg-yellow-500 px-8 py-3 rounded-lg font-semibold text-center hover:bg-yellow-400 transition duration-300 '>
-            <Link to='/booking'>
-             Book a Flight 
-            </Link>
-          </button>
 
-          <button className=' border-2 border-yellow-500 text-yellow-500 
-          px-8 py-3 rounded-lg font-semibold hover:bg-yellow-500 
+          <Link to='/booking' className='bg-yellow-500 px-8 py-3 rounded-lg font-semibold text-center hover:bg-yellow-400 transition duration-300 text-gray-900'>
+             Book a Flight
+          </Link>
+
+          <a href='#destinations' className=' border-2 border-yellow-500 text-yellow-500
+          px-8 py-3 rounded-lg font-semibold hover:bg-yellow-500
           hover:text-gray-900 transition duration-300 text-center'>
-             <a href='#destinations'>
              Explore Destination
             </a>
-          </button>
 
 
         </div>

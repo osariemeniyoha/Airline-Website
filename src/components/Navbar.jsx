@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Logo from '../assets/logo.png'
-import Hambuger from '../assets/hambuger.png'
+import Hamburger from '../assets/hambuger.png'
 
 
 
@@ -16,7 +16,7 @@ const Navbar = () => {
         <img src={Logo} alt="Airline logo" className='h-32 w-auto' />
 
         <ul className={`${isOpen ? 'flex flex-col absolute top-20 left-0 right-0 bg-blue-900 py-6 z-50' : 'hidden'} lg:flex lg:flex-row lg:static lg:bg-transparent lg:py-0 items-center gap-6 lg:gap-8 text-white`}>
-            <li><a href="#home" className='hover:text-blue-300 py-2 lg:py-0'>Home</a></li>
+            <li><Link to='/' className='hover:text-blue-300 py-2 lg:py-0'>Home</Link></li>
             <li><a href="#about" className='hover:text-blue-300 py-2 lg:py-0' >About</a></li>
             <li><a href="#destinations" className='hover:text-blue-300 py-2 lg:py-0' >Destinations</a></li>
             <li><a href="#whyus" className='hover:text-blue-300 py-2 lg:py-0' >Why Us</a></li>
@@ -30,7 +30,7 @@ const Navbar = () => {
         </ul>
 
         <button onClick={() => setIsOpen (!isOpen)}>
-          <img src={Hambuger} alt="hambuger" className='size-16 mr-10 hidden max-lg:block' />
+          <img src={Hamburger} alt="hamburger" className='size-16 mr-10 hidden max-lg:block' />
         </button>
        
         

@@ -60,14 +60,14 @@ const Footer = () => {
             <h3 className='text-lg font-bold mb-6 text-yellow-400'>Quick Links</h3>
 
             <ul className='space-y-3'>
-              <li><a href="#hero" className='hover:text-blue-300'>Home</a></li>
+              <li><Link to='/' className='hover:text-blue-300'>Home</Link></li>
               <li><a href="#about" className='hover:text-blue-300'>About</a></li>
               <li><a href="#destinations" className='hover:text-blue-300'>Destinations</a></li>
               <li><a href="#whyus" className='hover:text-blue-300'>Why Us</a></li>
               <li><a href="#testimonials" className='hover:text-blue-300'>Testimonials</a></li>
               <li>
                  <Link to='/booking'>
-                   Book a Flight 
+                   Book a Flight
                 </Link>
               </li>
             </ul>

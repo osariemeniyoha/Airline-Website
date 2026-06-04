@@ -31,7 +31,7 @@ const Testimonials = () => {
     }
   ]
 
-  const [currendtIndex, setCurrentIndex] = useState(0)
+  const [currentIndex, setCurrentIndex] = useState(0)
   
   // Next Slide
   const nextSlide = useCallback(() => {
@@ -59,7 +59,7 @@ const Testimonials = () => {
       nextSlide()
     }, 5000)
 
-    return() => clearInterval(interval)
+    return () => clearInterval(interval)
   }, [nextSlide])
 
 
@@ -89,25 +89,25 @@ const Testimonials = () => {
           <div className='bg-white rounded-xl shadow-2xl p-8 md:p-12
           flex flex-col items-center text-center'>
 
-            <p className='text-gray-700 text=lg md:text-xl
+            <p className='text-gray-700 text-lg md:text-xl
             italic mb-8 leading-relaxed max-w-2xl'>
-              {testimonials[currendtIndex].text}
+              {testimonials[currentIndex].text}
             </p>
 
 
             <div className='flex flex-col items-center'>
-              <img 
-              src={testimonials[currendtIndex].image} 
-              alt={testimonials[currendtIndex].name} 
-              className='w-20 h-20 md:w-24 md:h-24 rounded-full 
+              <img
+              src={testimonials[currentIndex].image}
+              alt={testimonials[currentIndex].name}
+              className='w-20 h-20 md:w-24 md:h-24 rounded-full
               object-cover border-4 border-blue-100 mb-4'/>
 
               <h4 className='font-bold text-xl text-gray-800'>
-                {testimonials[currendtIndex].name}
+                {testimonials[currentIndex].name}
               </h4>
 
               <p className='text-gray-500 mt-1'>
-                {testimonials[currendtIndex].location}
+                {testimonials[currentIndex].location}
               </p>
             </div>
 
@@ -148,7 +148,7 @@ const Testimonials = () => {
               key={index}
               onClick={() => goToSlide(index)}
               className={`w-3 h-3 rounded-full transition-all duration-300
-                ${currendtIndex === index
+                ${currentIndex === index
                   ? 'bg-yellow-500 w-6'
                   : 'bg-gray-300 hover:bg-gray-300'
                 }`} 
