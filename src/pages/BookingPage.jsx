@@ -1,144 +1,107 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
+import BookingSteps from '../components/BookingSteps'
+import DatePickerInput, { startOfToday, parseDateString, addDays } from '../components/DatePickerInput'
+
+const POPULAR_DESTINATIONS = [
+  'Lagos', 'London', 'New York', 'Dubai', 'Paris', 'Tokyo',
+  'Johannesburg', 'Cairo', 'Nairobi', 'Accra', 'Mumbai', 'Beijing',
+]
+
+const FLIGHT_TIMES = ['06:00', '08:30', '11:00', '13:30', '16:00', '18:30', '21:00', '23:30']
+
+const CABIN_CLASSES = [
+  { value: 'economy', label: 'Economy', desc: 'Standard comfort' },
+  { value: 'premium', label: 'Premium', desc: 'Extra legroom' },
+  { value: 'business', label: 'Business', desc: 'Lie-flat seats' },
+  { value: 'first', label: 'First', desc: 'Ultimate luxury' },
+]
 
 const Booking = () => {
-  // Flight search state
-  const [flightType, setFlightType] = useState('roundtrip')
-  const [from, setFrom] = useState('')
-  const [to, setTo] = useState('')
-  const [departDate, setDepartDate] = useState('')
+  const [searchParams] = useSearchParams()
+
+  const [flightType, setFlightType] = useState(() => {
+    const type = searchParams.get('type')
+    return type === 'oneway' || type === 'roundtrip' ? type : 'roundtrip'
+  })
+  const [from, setFrom] = useState(() => searchParams.get('from') || '')
+  const [to, setTo] = useState(() => searchParams.get('to') || '')
+  const [departDate, setDepartDate] = useState(() => searchParams.get('date') || '')
   const [departTime, setDepartTime] = useState('')
   const [returnDate, setReturnDate] = useState('')
   const [returnTime, setReturnTime] = useState('')
-  const [passengers, setPassengers] = useState(1)
+  const [passengers, setPassengers] = useState(() => {
+    const p = searchParams.get('passengers')
+    return p ? Number(p) : 1
+  })
   const [cabinClass, setCabinClass] = useState('economy')
-  
-  // Passenger details state
+
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [dob, setDob] = useState('')
   const [nationality, setNationality] = useState('')
-  
-  // Error state
+
   const [error, setError] = useState('')
   const [dateError, setDateError] = useState('')
-  
-  // Price calculation state
   const [calculatedPrice, setCalculatedPrice] = useState(null)
   const [showPrice, setShowPrice] = useState(false)
-  
-  // Booking confirmation state
   const [bookingConfirmed, setBookingConfirmed] = useState(false)
   const [bookingDetails, setBookingDetails] = useState(null)
 
-  // Popular destinations
-  const popularDestinations = [
-    'Lagos', 'London', 'New York', 'Dubai', 'Paris', 'Tokyo', 
-    'Johannesburg', 'Cairo', 'Nairobi', 'Accra', 'Mumbai', 'Beijing'
-  ]
+  const currentStep = bookingConfirmed ? 3 : showPrice ? 2 : 1
+  const today = startOfToday()
+  const returnMinDate = departDate ? addDays(parseDateString(departDate), 1) : today
 
-  // Available flight times
-  const flightTimes = [
-    '06:00', '08:30', '11:00', '13:30', '16:00', '18:30', '21:00', '23:30'
-  ]
-
-  // Price calculation function
   const calculatePrice = () => {
-    const basePrices = {
-      economy: 450,
-      premium: 650,
-      business: 1200,
-      first: 2500
-    }
-
+    const basePrices = { economy: 450, premium: 650, business: 1200, first: 2500 }
     const distanceMultipliers = {
-      'Lagos-London': 1.5,
-      'Lagos-New York': 2.0,
-      'Lagos-Dubai': 1.3,
-      'Lagos-Paris': 1.4,
-      'Lagos-Tokyo': 2.2,
-      'New York-London': 1.2,
-      'Dubai-London': 1.3,
-      'default': 1.0
+      'Lagos-London': 1.5, 'Lagos-New York': 2.0, 'Lagos-Dubai': 1.3,
+      'Lagos-Paris': 1.4, 'Lagos-Tokyo': 2.2, 'New York-London': 1.2,
+      'Dubai-London': 1.3, default: 1.0,
     }
-
     const route = `${from}-${to}`
     const distanceMultiplier = distanceMultipliers[route] || distanceMultipliers.default
-    const passengerMultiplier = passengers
     const flightTypeMultiplier = flightType === 'roundtrip' ? 2 : 1
-    
     const basePrice = basePrices[cabinClass] || basePrices.economy
-    const subtotal = basePrice * distanceMultiplier * passengerMultiplier * flightTypeMultiplier
+    const subtotal = basePrice * distanceMultiplier * passengers * flightTypeMultiplier
     const tax = subtotal * 0.15
     const serviceFee = 25
     const total = subtotal + tax + serviceFee
-    
     return {
       subtotal: subtotal.toFixed(2),
       tax: tax.toFixed(2),
       serviceFee: serviceFee.toFixed(2),
-      total: total.toFixed(2)
+      total: total.toFixed(2),
     }
   }
 
-  // Generate random booking reference
   const generateBookingReference = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-    let reference = ''
-    for (let i = 0; i < 6; i++) {
-      reference += chars.charAt(Math.floor(Math.random() * chars.length))
-    }
-    return reference
+    return Array.from({ length: 6 }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join('')
   }
 
-  // Validate dates
   const validateDates = () => {
     setDateError('')
-    
-    if (flightType === 'roundtrip') {
-      if (!returnDate) {
-        setDateError('Please select a return date')
-        return false
-      }
-      
-      const depart = new Date(departDate)
-      const return_d = new Date(returnDate)
-      
-      if (return_d < depart) {
-        setDateError('Return date cannot be before departure date')
-        return false
-      }
-      
-      if (departDate === returnDate) {
-        setDateError('Return date cannot be the same as departure date')
-        return false
-      }
-    }
+    if (flightType !== 'roundtrip') return true
+    if (!returnDate) { setDateError('Please select a return date'); return false }
+    if (returnDate < departDate) { setDateError('Return date cannot be before departure date'); return false }
+    if (departDate === returnDate) { setDateError('Return date cannot be the same as departure date'); return false }
     return true
   }
+
+  const swapCities = () => { setFrom(to); setTo(from) }
 
   const handleSearch = (e) => {
     e.preventDefault()
     setError('')
-    
-    // Check if departure and destination are the same
-    if (from === to) {
-      setError('Departure and destination cannot be the same city')
-      return
-    }
-    
-    // Validate dates
-    if (!validateDates()) {
-      return
-    }
-    
+    if (from === to) { setError('Departure and destination cannot be the same city'); return }
+    if (!validateDates()) return
     if (from && to && departDate && departTime) {
-      const price = calculatePrice()
-      setCalculatedPrice(price)
+      setCalculatedPrice(calculatePrice())
       setShowPrice(true)
       setBookingConfirmed(false)
     }
@@ -147,644 +110,402 @@ const Booking = () => {
   const handleBooking = (e) => {
     e.preventDefault()
     setError('')
-    
-    // Create booking details object
-    const booking = {
+    setBookingDetails({
       reference: generateBookingReference(),
-      bookingDate: new Date().toLocaleDateString('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric'
-      }),
-      passenger: {
-        firstName,
-        lastName,
-        email,
-        phone,
-        nationality
-      },
+      bookingDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+      passenger: { firstName, lastName, email, phone, nationality },
       flight: {
-        type: flightType,
-        from,
-        to,
-        departDate,
-        departTime,
+        type: flightType, from, to, departDate, departTime,
         returnDate: flightType === 'roundtrip' ? returnDate : null,
         returnTime: flightType === 'roundtrip' ? returnTime : null,
-        cabinClass,
-        passengers
+        cabinClass, passengers,
       },
-      price: calculatedPrice
-    }
-    
-    setBookingDetails(booking)
+      price: calculatedPrice,
+    })
     setBookingConfirmed(true)
   }
 
-  // Reset form to initial state
   const resetForm = () => {
-    setFlightType('roundtrip')
-    setFrom('')
-    setTo('')
-    setDepartDate('')
-    setDepartTime('')
-    setReturnDate('')
-    setReturnTime('')
-    setPassengers(1)
-    setCabinClass('economy')
-    setFirstName('')
-    setLastName('')
-    setEmail('')
-    setPhone('')
-    setDob('')
-    setNationality('')
-    setCalculatedPrice(null)
-    setShowPrice(false)
-    setError('')
-    setDateError('')
+    setFlightType('roundtrip'); setFrom(''); setTo(''); setDepartDate(''); setDepartTime('')
+    setReturnDate(''); setReturnTime(''); setPassengers(1); setCabinClass('economy')
+    setFirstName(''); setLastName(''); setEmail(''); setPhone(''); setDob(''); setNationality('')
+    setCalculatedPrice(null); setShowPrice(false); setError(''); setDateError('')
   }
 
-  // Book another flight
-  const bookAnotherFlight = () => {
-    resetForm()
-    setBookingConfirmed(false)
-    setBookingDetails(null)
-  }
+  const bookAnotherFlight = () => { resetForm(); setBookingConfirmed(false); setBookingDetails(null) }
 
-  // Format date for display
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A'
-    return new Date(dateString).toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    })
+    return new Date(dateString).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
   }
 
-  // Format time for display
   const formatTime = (timeString) => {
     if (!timeString) return 'N/A'
-    return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    })
+    return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
   }
 
   return (
     <>
       <Navbar />
-      <section className='pt-24 pb-20 bg-gradient-to-b from-slate-50 to-slate-100 min-h-screen'>
-        <div className='max-w-7xl mx-auto px-6'>
-        
-        {/* Header */}
-        <div className='text-center mb-12'>
-          <h1 className='text-4xl md:text-5xl font-bold text-blue-900 mb-4'>
-            Book Your <span className='text-yellow-500'>Flight</span>
-          </h1>
-          <p className='text-gray-600 text-lg max-w-2xl mx-auto'>
-            Experience comfort and luxury with UP Air. Book your next adventure today.
-          </p>
-          <div className='h-1 w-24 bg-yellow-500 mx-auto mt-6'></div>
-        </div>
-
-        {/* Error Message Display */}
-        {(error || dateError) && (
-          <div className='max-w-4xl mx-auto mb-6'>
-            <div className='bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg flex items-center'>
-              <svg className='w-6 h-6 mr-2' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' />
-              </svg>
-              <span className='font-semibold'>{error || dateError}</span>
-            </div>
+      <section className='pt-[4.5rem] pb-20 min-h-screen bg-linear-to-b from-slate-50 via-white to-slate-50'>
+        <div className='max-w-7xl mx-auto px-5 md:px-8 py-10 md:py-14'>
+          <div className='text-center mb-8'>
+            <span className='section-eyebrow justify-center'>Booking</span>
+            <h1 className='font-display text-3xl md:text-5xl font-bold text-navy-900 mt-3 tracking-tight'>
+              Book Your <span className='text-gold-500'>Flight</span>
+            </h1>
+            <p className='text-slate-600 mt-3 max-w-xl mx-auto'>
+              Search, select, and confirm — your next journey is just a few steps away.
+            </p>
           </div>
-        )}
 
-        {/* Show Ticket if booking is confirmed */}
-        {bookingConfirmed && bookingDetails ? (
-          <div className='max-w-4xl mx-auto'>
-            {/* Success Message */}
-            <div className='bg-green-100 border border-green-400 text-green-700 px-6 py-4 rounded-lg mb-8 flex items-center justify-between'>
-              <div className='flex items-center'>
-                <svg className='w-6 h-6 mr-2' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 13l4 4L19 7' />
+          <BookingSteps currentStep={currentStep} />
+
+          {(error || dateError) && (
+            <div className='max-w-4xl mx-auto mb-6 animate-slide-down'>
+              <div className='flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-xl'>
+                <svg className='w-5 h-5 shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' />
                 </svg>
-                <span className='font-semibold'>Booking Confirmed! Your e-ticket is ready.</span>
-              </div>
-              <button
-                onClick={bookAnotherFlight}
-                className='bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors'
-              >
-                Book Another Flight
-              </button>
-            </div>
-
-            {/* E-Ticket */}
-            <div className='bg-white rounded-2xl shadow-2xl overflow-hidden border-2 border-blue-200'>
-              {/* Ticket Header */}
-              <div className='bg-blue-900 text-white p-6 flex justify-between items-center'>
-                <div>
-                  <h2 className='text-2xl font-bold'>UP AIR</h2>
-                  <p className='text-blue-200 text-sm'>Electronic Ticket</p>
-                </div>
-                <div className='text-right'>
-                  <p className='text-2xl font-bold tracking-wider'>{bookingDetails.reference}</p>
-                  <p className='text-blue-200 text-sm'>Booking Reference</p>
-                </div>
-              </div>
-
-              {/* Passenger Info */}
-              <div className='p-6 border-b border-gray-200'>
-                <h3 className='text-lg font-bold text-gray-800 mb-4'>Passenger Information</h3>
-                <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
-                  <div>
-                    <p className='text-xs text-gray-500'>Name</p>
-                    <p className='font-semibold'>{bookingDetails.passenger.firstName} {bookingDetails.passenger.lastName}</p>
-                  </div>
-                  <div>
-                    <p className='text-xs text-gray-500'>Email</p>
-                    <p className='font-semibold'>{bookingDetails.passenger.email}</p>
-                  </div>
-                  <div>
-                    <p className='text-xs text-gray-500'>Phone</p>
-                    <p className='font-semibold'>{bookingDetails.passenger.phone}</p>
-                  </div>
-                  <div>
-                    <p className='text-xs text-gray-500'>Nationality</p>
-                    <p className='font-semibold'>{bookingDetails.passenger.nationality}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Flight Details */}
-              <div className='p-6 border-b border-gray-200 bg-blue-50'>
-                <h3 className='text-lg font-bold text-gray-800 mb-4'>Flight Details</h3>
-                
-                {/* Route */}
-                <div className='flex items-center justify-between mb-6'>
-                  <div className='text-center flex-1'>
-                    <p className='text-3xl font-bold text-blue-900'>{bookingDetails.flight.from}</p>
-                    <p className='text-xs text-gray-500 mt-1'>Departure</p>
-                    <p className='text-sm font-semibold text-blue-700 mt-1'>
-                      {formatTime(bookingDetails.flight.departTime)}
-                    </p>
-                  </div>
-                  <div className='flex-1 flex justify-center'>
-                    <div className='relative w-full max-w-50'>
-                      <div className='border-t-2 border-dashed border-blue-300 absolute top-1/2 w-full'></div>
-                      <svg className='w-8 h-8 text-blue-600 mx-auto relative bg-blue-50' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M14 5l7 7m0 0l-7 7m7-7H3' />
-                      </svg>
-                    </div>
-                  </div>
-                  <div className='text-center flex-1'>
-                    <p className='text-3xl font-bold text-blue-900'>{bookingDetails.flight.to}</p>
-                    <p className='text-xs text-gray-500 mt-1'>Arrival</p>
-                    <p className='text-sm font-semibold text-blue-700 mt-1'>
-                      {/* Arrival time is departure time + flight duration */}
-                      {formatTime(bookingDetails.flight.departTime)}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Dates & Class */}
-                <div className='grid grid-cols-2 md:grid-cols-4 gap-4 mt-4'>
-                  <div>
-                    <p className='text-xs text-gray-500'>Departure Date</p>
-                    <p className='font-semibold'>{formatDate(bookingDetails.flight.departDate)}</p>
-                  </div>
-                  {bookingDetails.flight.returnDate && (
-                    <div>
-                      <p className='text-xs text-gray-500'>Return Date</p>
-                      <p className='font-semibold'>{formatDate(bookingDetails.flight.returnDate)}</p>
-                      <p className='text-xs text-gray-600'>{formatTime(bookingDetails.flight.returnTime)}</p>
-                    </div>
-                  )}
-                  <div>
-                    <p className='text-xs text-gray-500'>Cabin Class</p>
-                    <p className='font-semibold capitalize'>{bookingDetails.flight.cabinClass}</p>
-                  </div>
-                  <div>
-                    <p className='text-xs text-gray-500'>Passengers</p>
-                    <p className='font-semibold'>{bookingDetails.flight.passengers}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Price Summary */}
-              <div className='p-6 border-b border-gray-200'>
-                <h3 className='text-lg font-bold text-gray-800 mb-4'>Payment Summary</h3>
-                <div className='space-y-2'>
-                  <div className='flex justify-between'>
-                    <span className='text-gray-600'>Base Fare</span>
-                    <span className='font-semibold'>${bookingDetails.price.subtotal}</span>
-                  </div>
-                  <div className='flex justify-between'>
-                    <span className='text-gray-600'>Taxes & Fees</span>
-                    <span className='font-semibold'>${bookingDetails.price.tax}</span>
-                  </div>
-                  <div className='flex justify-between'>
-                    <span className='text-gray-600'>Service Fee</span>
-                    <span className='font-semibold'>${bookingDetails.price.serviceFee}</span>
-                  </div>
-                  <div className='flex justify-between pt-2 border-t border-gray-200'>
-                    <span className='font-bold text-gray-800'>Total Paid</span>
-                    <span className='text-2xl font-bold text-yellow-600'>${bookingDetails.price.total}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className='p-6 bg-gray-50 text-center'>
-                <p className='text-sm text-gray-600 mb-4'>
-                  Thank you for choosing UP Air. We wish you a pleasant flight!
-                </p>
-                <p className='text-xs text-gray-500'>
-                  Booking Date: {bookingDetails.bookingDate}
-                </p>
+                <span className='font-medium text-sm'>{error || dateError}</span>
               </div>
             </div>
+          )}
 
-            {/* Action Buttons */}
-            <div className='flex justify-center gap-4 mt-8'>
-              <button
-                onClick={() => window.print()}
-                className='bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors flex items-center gap-2'
-              >
-                <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z' />
-                </svg>
-                Print Ticket
-              </button>
-              <button
-                onClick={bookAnotherFlight}
-                className='bg-yellow-500 hover:bg-yellow-600 text-gray-900 px-6 py-3 rounded-lg font-semibold transition-colors flex items-center gap-2'
-              >
-                <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 19l9 2-9-18-9 18 9-2zm0 0v-8' />
-                </svg>
-                Book Another Flight
-              </button>
-            </div>
-          </div>
-        ) : (
-          /* Regular Booking Form - Shown when no booking is confirmed */
-          <div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
-            {/* Main Booking Form - Left Column */}
-            <div className='lg:col-span-2'>
-              
-              {/* Flight Search Card */}
-              <div className='bg-white rounded-xl shadow-lg p-6 md:p-8 mb-8'>
-                <h2 className='text-2xl font-bold text-blue-900 mb-6'>Search Flights</h2>
-                
-                <form onSubmit={handleSearch}>
-                  {/* Flight Type */}
-                  <div className='flex gap-6 mb-6'>
-                    <label className='flex items-center'>
-                      <input
-                        type='radio'
-                        name='flightType'
-                        value='roundtrip'
-                        checked={flightType === 'roundtrip'}
-                        onChange={(e) => setFlightType(e.target.value)}
-                        className='w-4 h-4 text-yellow-500 focus:ring-yellow-500'
-                      />
-                      <span className='ml-2 text-gray-700'>Round Trip</span>
-                    </label>
-                    <label className='flex items-center'>
-                      <input
-                        type='radio'
-                        name='flightType'
-                        value='oneway'
-                        checked={flightType === 'oneway'}
-                        onChange={(e) => setFlightType(e.target.value)}
-                        className='w-4 h-4 text-yellow-500 focus:ring-yellow-500'
-                      />
-                      <span className='ml-2 text-gray-700'>One Way</span>
-                    </label>
+          {bookingConfirmed && bookingDetails ? (
+            <div className='max-w-4xl mx-auto animate-fade-in'>
+              <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-emerald-50 border border-emerald-200 text-emerald-800 px-5 py-4 rounded-xl mb-8'>
+                <div className='flex items-center gap-3'>
+                  <div className='w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center shrink-0'>
+                    <svg className='w-5 h-5 text-white' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M5 13l4 4L19 7' />
+                    </svg>
                   </div>
-
-                  {/* From/To */}
-                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-4'>
-                    <div>
-                      <label className='block text-gray-700 font-medium mb-2'>From</label>
-                      <select
-                        value={from}
-                        onChange={(e) => setFrom(e.target.value)}
-                        required
-                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 ${
-                          from === to && from !== '' ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                        }`}
-                      >
-                        <option value=''>Select departure city</option>
-                        {popularDestinations.map((city) => (
-                          <option key={city} value={city}>{city}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className='block text-gray-700 font-medium mb-2'>To</label>
-                      <select
-                        value={to}
-                        onChange={(e) => setTo(e.target.value)}
-                        required
-                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 ${
-                          from === to && to !== '' ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                        }`}
-                      >
-                        <option value=''>Select destination</option>
-                        {popularDestinations.map((city) => (
-                          <option key={city} value={city}>{city}</option>
-                        ))}
-                      </select>
-                    </div>
+                  <div>
+                    <p className='font-semibold'>Booking Confirmed</p>
+                    <p className='text-sm text-emerald-700'>Your e-ticket is ready to download or print.</p>
                   </div>
+                </div>
+                <button onClick={bookAnotherFlight} className='text-sm font-semibold text-emerald-700 hover:text-emerald-900 underline underline-offset-2 no-print'>
+                  Book another flight
+                </button>
+              </div>
 
-                  {/* Departure Date & Time */}
-                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-4'>
-                    <div>
-                      <label className='block text-gray-700 font-medium mb-2'>Departure Date</label>
-                      <input
-                        type='date'
-                        value={departDate}
-                        onChange={(e) => setDepartDate(e.target.value)}
-                        required
-                        min={new Date().toISOString().split('T')[0]}
-                        className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500'
-                      />
-                    </div>
-                    <div>
-                      <label className='block text-gray-700 font-medium mb-2'>Departure Time</label>
-                      <select
-                        value={departTime}
-                        onChange={(e) => setDepartTime(e.target.value)}
-                        required
-                        className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500'
-                      >
-                        <option value=''>Select time</option>
-                        {flightTimes.map((time) => (
-                          <option key={time} value={time}>{formatTime(time)}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Return Date & Time - Only for round trips */}
-                  {flightType === 'roundtrip' && (
-                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-4'>
+              <div className='boarding-pass'>
+                <div className='grid grid-cols-1 md:grid-cols-[1fr_200px]'>
+                  <div>
+                    <div className='bg-navy-900 text-white px-6 py-5 flex justify-between items-start'>
                       <div>
-                        <label className='block text-gray-700 font-medium mb-2'>Return Date</label>
-                        <input
-                          type='date'
-                          value={returnDate}
-                          onChange={(e) => setReturnDate(e.target.value)}
-                          required
-                          min={departDate || new Date().toISOString().split('T')[0]}
-                          className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 ${
-                            (returnDate && departDate && (returnDate < departDate || returnDate === departDate)) 
-                              ? 'border-red-500 bg-red-50' 
-                              : 'border-gray-300'
-                          }`}
-                        />
-                        {returnDate && departDate && returnDate === departDate && (
-                          <p className='text-xs text-red-500 mt-1'>Return date cannot be same as departure</p>
-                        )}
+                        <p className='font-display text-xl font-bold tracking-wide'>UP AIR</p>
+                        <p className='text-blue-200/70 text-xs mt-0.5'>Electronic Ticket / E-Ticket</p>
                       </div>
-                      <div>
-                        <label className='block text-gray-700 font-medium mb-2'>Return Time</label>
-                        <select
-                          value={returnTime}
-                          onChange={(e) => setReturnTime(e.target.value)}
-                          required
-                          className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500'
-                        >
-                          <option value=''>Select time</option>
-                          {flightTimes.map((time) => (
-                            <option key={time} value={time}>{formatTime(time)}</option>
+                      <div className='text-right'>
+                        <p className='font-display text-2xl font-bold tracking-widest text-gold-400'>{bookingDetails.reference}</p>
+                        <p className='text-blue-200/70 text-xs'>PNR Reference</p>
+                      </div>
+                    </div>
+
+                    <div className='px-6 py-5 border-b border-slate-100'>
+                      <p className='text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3'>Passenger</p>
+                      <p className='font-display text-lg font-bold text-navy-900'>
+                        {bookingDetails.passenger.firstName} {bookingDetails.passenger.lastName}
+                      </p>
+                      <div className='grid grid-cols-2 gap-3 mt-3 text-sm'>
+                        <div><p className='text-slate-400 text-xs'>Email</p><p className='text-slate-700'>{bookingDetails.passenger.email}</p></div>
+                        <div><p className='text-slate-400 text-xs'>Phone</p><p className='text-slate-700'>{bookingDetails.passenger.phone}</p></div>
+                        <div><p className='text-slate-400 text-xs'>Nationality</p><p className='text-slate-700'>{bookingDetails.passenger.nationality}</p></div>
+                        <div><p className='text-slate-400 text-xs'>Booked</p><p className='text-slate-700'>{bookingDetails.bookingDate}</p></div>
+                      </div>
+                    </div>
+
+                    <div className='px-6 py-5 bg-slate-50'>
+                      <p className='text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4'>Flight Itinerary</p>
+                      <div className='flex items-center gap-4'>
+                        <div className='text-center'>
+                          <p className='font-display text-2xl font-bold text-navy-900'>{bookingDetails.flight.from}</p>
+                          <p className='text-sm font-semibold text-navy-700 mt-1'>{formatTime(bookingDetails.flight.departTime)}</p>
+                          <p className='text-xs text-slate-500 mt-0.5'>{formatDate(bookingDetails.flight.departDate)}</p>
+                        </div>
+                        <div className='flex-1 flex flex-col items-center gap-1'>
+                          <div className='w-full flex items-center gap-2'>
+                            <div className='flex-1 border-t-2 border-dashed border-slate-300' />
+                            <svg className='w-6 h-6 text-gold-500 shrink-0' fill='currentColor' viewBox='0 0 24 24'>
+                              <path d='M21 16v-2l-8-5V3.5a1.5 1.5 0 00-1.5-1.5h-1A1.5 1.5 0 009 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z' />
+                            </svg>
+                            <div className='flex-1 border-t-2 border-dashed border-slate-300' />
+                          </div>
+                          <p className='text-xs text-slate-400 capitalize'>{bookingDetails.flight.type} · {bookingDetails.flight.cabinClass}</p>
+                        </div>
+                        <div className='text-center'>
+                          <p className='font-display text-2xl font-bold text-navy-900'>{bookingDetails.flight.to}</p>
+                          <p className='text-sm font-semibold text-navy-700 mt-1'>{formatTime(bookingDetails.flight.departTime)}</p>
+                          {bookingDetails.flight.returnDate && (
+                            <p className='text-xs text-slate-500 mt-0.5'>Return {formatDate(bookingDetails.flight.returnDate)}</p>
+                          )}
+                        </div>
+                      </div>
+                      <p className='text-xs text-slate-500 mt-4'>{bookingDetails.flight.passengers} passenger{bookingDetails.flight.passengers > 1 ? 's' : ''}</p>
+                    </div>
+                  </div>
+
+                  <div className='bg-navy-900 text-white px-6 py-5 flex flex-col justify-between md:border-l border-dashed border-slate-300'>
+                    <div>
+                      <p className='text-xs text-blue-200/60 uppercase tracking-wider mb-4'>Payment</p>
+                      <div className='space-y-2 text-sm'>
+                        <div className='flex justify-between'><span className='text-blue-200/70'>Base fare</span><span>${bookingDetails.price.subtotal}</span></div>
+                        <div className='flex justify-between'><span className='text-blue-200/70'>Taxes</span><span>${bookingDetails.price.tax}</span></div>
+                        <div className='flex justify-between'><span className='text-blue-200/70'>Service fee</span><span>${bookingDetails.price.serviceFee}</span></div>
+                      </div>
+                    </div>
+                    <div className='mt-6 pt-4 border-t border-white/10'>
+                      <p className='text-xs text-blue-200/60 uppercase tracking-wider'>Total Paid</p>
+                      <p className='font-display text-3xl font-bold text-gold-400 mt-1'>${bookingDetails.price.total}</p>
+                    </div>
+                    <div className='mt-6 hidden md:block'>
+                      <div className='w-full h-16 bg-white/5 rounded-lg flex items-center justify-center'>
+                        <div className='flex gap-0.5'>
+                          {Array.from({ length: 20 }).map((_, i) => (
+                            <div key={i} className={`w-1 ${i % 3 === 0 ? 'h-10 bg-white/30' : 'h-6 bg-white/20'}`} />
                           ))}
-                        </select>
+                        </div>
                       </div>
-                    </div>
-                  )}
-
-                  {/* Passengers & Class */}
-                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-6'>
-                    <div>
-                      <label className='block text-gray-700 font-medium mb-2'>Passengers</label>
-                      <select
-                        value={passengers}
-                        onChange={(e) => setPassengers(parseInt(e.target.value))}
-                        className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500'
-                      >
-                        {[1,2,3,4,5,6,7,8].map(num => (
-                          <option key={num} value={num}>{num} {num === 1 ? 'Passenger' : 'Passengers'}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className='block text-gray-700 font-medium mb-2'>Cabin Class</label>
-                      <select
-                        value={cabinClass}
-                        onChange={(e) => setCabinClass(e.target.value)}
-                        className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500'
-                      >
-                        <option value='economy'>Economy Class</option>
-                        <option value='premium'>Premium Economy</option>
-                        <option value='business'>Business Class</option>
-                        <option value='first'>First Class</option>
-                      </select>
+                      <p className='text-[10px] text-blue-200/40 text-center mt-2 tracking-widest'>{bookingDetails.reference}</p>
                     </div>
                   </div>
-
-                  <button
-                    type='submit'
-                    className='w-full bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-4 px-6 rounded-lg transition-colors duration-300 text-lg'
-                  >
-                    Search Flights
-                  </button>
-                </form>
+                </div>
               </div>
 
-              {/* Passenger Details Card - Shows after price calculation */}
-              {showPrice && (
-                <div className='bg-white rounded-xl shadow-lg p-6 md:p-8'>
-                  <h2 className='text-2xl font-bold text-blue-900 mb-6'>Passenger Details</h2>
-                  
-                  <form onSubmit={handleBooking}>
-                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-4'>
-                      <div>
-                        <label className='block text-gray-700 font-medium mb-2'>First Name</label>
-                        <input
-                          type='text'
-                          value={firstName}
-                          onChange={(e) => setFirstName(e.target.value)}
-                          required
-                          className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500'
-                          placeholder='Osariemen Precious'
-                        />
-                      </div>
-                      <div>
-                        <label className='block text-gray-700 font-medium mb-2'>Last Name</label>
-                        <input
-                          type='text'
-                          value={lastName}
-                          onChange={(e) => setLastName(e.target.value)}
-                          required
-                          className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500'
-                          placeholder='Iyoha'
-                        />
-                      </div>
-                    </div>
+              <div className='flex flex-col sm:flex-row justify-center gap-3 mt-8 no-print'>
+                <button onClick={() => window.print()} className='btn-primary'>
+                  <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z' />
+                  </svg>
+                  Print Ticket
+                </button>
+                <button onClick={bookAnotherFlight} className='btn-outline !text-navy-900 !border-navy-900/20 hover:!bg-navy-900 hover:!text-white hover:!border-navy-900'>
+                  Book Another Flight
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className='grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8'>
+              <div className='lg:col-span-2 space-y-6'>
+                <div className='bg-white rounded-2xl border border-slate-100 shadow-sm p-6 md:p-8'>
+                  <h2 className='font-display text-xl font-bold text-navy-900 mb-6 flex items-center gap-2'>
+                    <span className='w-8 h-8 rounded-lg bg-navy-900 text-white text-sm flex items-center justify-center font-bold'>1</span>
+                    Search Flights
+                  </h2>
 
-                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-4'>
-                      <div>
-                        <label className='block text-gray-700 font-medium mb-2'>Email</label>
-                        <input
-                          type='email'
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          required
-                          className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500'
-                          placeholder='iyohapreciousosariemen@gmail.com'
-                        />
-                      </div>
-                      <div>
-                        <label className='block text-gray-700 font-medium mb-2'>Phone</label>
-                        <input
-                          type='tel'
-                          value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
-                          required
-                          className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500'
-                          placeholder='+1234567890'
-                        />
-                      </div>
-                    </div>
-
-                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-6'>
-                      <div>
-                        <label className='block text-gray-700 font-medium mb-2'>Date of Birth</label>
-                        <input
-                          type='date'
-                          value={dob}
-                          onChange={(e) => setDob(e.target.value)}
-                          required
-                          max={new Date().toISOString().split('T')[0]}
-                          className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500'
-                        />
-                      </div>
-                      <div>
-                        <label className='block text-gray-700 font-medium mb-2'>Nationality</label>
-                        <select
-                          value={nationality}
-                          onChange={(e) => setNationality(e.target.value)}
-                          required
-                          className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500'
+                  <form onSubmit={handleSearch} className='space-y-5'>
+                    <div className='flex flex-wrap gap-2'>
+                      {[{ value: 'roundtrip', label: 'Round Trip' }, { value: 'oneway', label: 'One Way' }].map(({ value, label }) => (
+                        <button
+                          key={value}
+                          type='button'
+                          onClick={() => setFlightType(value)}
+                          className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                            flightType === value ? 'bg-navy-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                          }`}
                         >
-                          <option value=''>Select nationality</option>
-                          <option value='United States'>United States</option>
-                          <option value='United Kingdom'>United Kingdom</option>
-                          <option value='Nigeria'>Nigeria</option>
-                          <option value='Ghana'>Ghana</option>
-                          <option value='Kenya'>Kenya</option>
-                          <option value='South Africa'>South Africa</option>
-                          <option value='UAE'>UAE</option>
-                          <option value='France'>France</option>
-                          <option value='Japan'>Japan</option>
-                          <option value='China'>China</option>
-                          <option value='India'>India</option>
-                          <option value='Brazil'>Brazil</option>
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className='grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-3 items-end'>
+                      <div>
+                        <label className='form-label'>From</label>
+                        <select value={from} onChange={(e) => setFrom(e.target.value)} required className={`form-input ${from === to && from ? 'error' : ''}`}>
+                          <option value=''>Select departure city</option>
+                          {POPULAR_DESTINATIONS.map((city) => <option key={city} value={city}>{city}</option>)}
+                        </select>
+                      </div>
+                      <button type='button' onClick={swapCities} aria-label='Swap cities' className='hidden md:flex w-10 h-10 items-center justify-center rounded-full bg-slate-100 hover:bg-gold-400/20 text-slate-500 hover:text-gold-600 transition-colors mb-0.5'>
+                        <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4' />
+                        </svg>
+                      </button>
+                      <div>
+                        <label className='form-label'>To</label>
+                        <select value={to} onChange={(e) => setTo(e.target.value)} required className={`form-input ${from === to && to ? 'error' : ''}`}>
+                          <option value=''>Select destination</option>
+                          {POPULAR_DESTINATIONS.map((city) => <option key={city} value={city}>{city}</option>)}
                         </select>
                       </div>
                     </div>
 
-                    <button
-                      type='submit'
-                      className='w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-lg transition-colors duration-300 text-lg'
-                    >
-                      Confirm Booking
+                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                      <div>
+                        <label className='form-label'>Departure Date</label>
+                        <DatePickerInput
+                          value={departDate}
+                          onChange={setDepartDate}
+                          minDate={today}
+                          required
+                          placeholder='Select departure date'
+                        />
+                      </div>
+                      <div>
+                        <label className='form-label'>Departure Time</label>
+                        <select value={departTime} onChange={(e) => setDepartTime(e.target.value)} required className='form-input'>
+                          <option value=''>Select time</option>
+                          {FLIGHT_TIMES.map((time) => <option key={time} value={time}>{formatTime(time)}</option>)}
+                        </select>
+                      </div>
+                    </div>
+
+                    {flightType === 'roundtrip' && (
+                      <div className='grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in'>
+                        <div>
+                          <label className='form-label'>Return Date</label>
+                          <DatePickerInput
+                            value={returnDate}
+                            onChange={setReturnDate}
+                            minDate={returnMinDate}
+                            required
+                            error={returnDate && departDate && returnDate <= departDate}
+                            placeholder='Select return date'
+                          />
+                        </div>
+                        <div>
+                          <label className='form-label'>Return Time</label>
+                          <select value={returnTime} onChange={(e) => setReturnTime(e.target.value)} required className='form-input'>
+                            <option value=''>Select time</option>
+                            {FLIGHT_TIMES.map((time) => <option key={time} value={time}>{formatTime(time)}</option>)}
+                          </select>
+                        </div>
+                      </div>
+                    )}
+
+                    <div>
+                      <label className='form-label'>Passengers</label>
+                      <select value={passengers} onChange={(e) => setPassengers(Number(e.target.value))} className='form-input max-w-xs'>
+                        {[1,2,3,4,5,6,7,8].map((n) => <option key={n} value={n}>{n} {n === 1 ? 'Passenger' : 'Passengers'}</option>)}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className='form-label mb-3'>Cabin Class</label>
+                      <div className='grid grid-cols-2 md:grid-cols-4 gap-3'>
+                        {CABIN_CLASSES.map(({ value, label, desc }) => (
+                          <button
+                            key={value}
+                            type='button'
+                            onClick={() => setCabinClass(value)}
+                            className={`p-3 rounded-xl border-2 text-left transition-all ${
+                              cabinClass === value
+                                ? 'border-navy-900 bg-navy-900/5 ring-1 ring-navy-900'
+                                : 'border-slate-200 hover:border-slate-300'
+                            }`}
+                          >
+                            <p className={`text-sm font-bold ${cabinClass === value ? 'text-navy-900' : 'text-slate-700'}`}>{label}</p>
+                            <p className='text-xs text-slate-500 mt-0.5'>{desc}</p>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <button type='submit' className='btn-primary w-full py-3.5'>
+                      Search Flights
                     </button>
                   </form>
                 </div>
-              )}
-            </div>
 
-            {/* Price Summary - Right Column */}
-            <div className='lg:col-span-1'>
-              <div className='bg-white rounded-xl shadow-lg p-6 md:p-8 sticky top-24'>
-                <h2 className='text-2xl font-bold text-blue-900 mb-6'>Price Summary</h2>
-                
-                {showPrice && calculatedPrice ? (
-                  <div>
-                    <div className='space-y-4 mb-6'>
-                      <div className='flex justify-between'>
-                        <span className='text-gray-600'>Base Fare</span>
-                        <span className='font-semibold'>${calculatedPrice.subtotal}</span>
+                {showPrice && (
+                  <div className='bg-white rounded-2xl border border-slate-100 shadow-sm p-6 md:p-8 animate-fade-in'>
+                    <h2 className='font-display text-xl font-bold text-navy-900 mb-6 flex items-center gap-2'>
+                      <span className='w-8 h-8 rounded-lg bg-navy-900 text-white text-sm flex items-center justify-center font-bold'>2</span>
+                      Passenger Details
+                    </h2>
+                    <form onSubmit={handleBooking} className='space-y-4'>
+                      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                        <div><label className='form-label'>First Name</label><input type='text' value={firstName} onChange={(e) => setFirstName(e.target.value)} required className='form-input' placeholder='John' /></div>
+                        <div><label className='form-label'>Last Name</label><input type='text' value={lastName} onChange={(e) => setLastName(e.target.value)} required className='form-input' placeholder='Doe' /></div>
                       </div>
-                      <div className='flex justify-between'>
-                        <span className='text-gray-600'>Taxes & Fees</span>
-                        <span className='font-semibold'>${calculatedPrice.tax}</span>
+                      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                        <div><label className='form-label'>Email</label><input type='email' value={email} onChange={(e) => setEmail(e.target.value)} required className='form-input' placeholder='john@example.com' /></div>
+                        <div><label className='form-label'>Phone</label><input type='tel' value={phone} onChange={(e) => setPhone(e.target.value)} required className='form-input' placeholder='+1 234 567 8900' /></div>
                       </div>
-                      <div className='flex justify-between'>
-                        <span className='text-gray-600'>Service Fee</span>
-                        <span className='font-semibold'>${calculatedPrice.serviceFee}</span>
-                      </div>
-                      <div className='border-t border-gray-200 pt-4'>
-                        <div className='flex justify-between'>
-                          <span className='text-lg font-bold text-gray-800'>Total</span>
-                          <span className='text-2xl font-bold text-yellow-600'>
-                            ${calculatedPrice.total}
-                          </span>
+                      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                        <div>
+                          <label className='form-label'>Date of Birth</label>
+                          <DatePickerInput
+                            value={dob}
+                            onChange={setDob}
+                            maxDate={today}
+                            required
+                            placeholder='Select date of birth'
+                          />
                         </div>
-                        <p className='text-xs text-gray-500 mt-2'>
-                          Includes all taxes and fees
-                        </p>
+                        <div>
+                          <label className='form-label'>Nationality</label>
+                          <select value={nationality} onChange={(e) => setNationality(e.target.value)} required className='form-input'>
+                            <option value=''>Select nationality</option>
+                            {['United States','United Kingdom','Nigeria','Ghana','Kenya','South Africa','UAE','France','Japan','China','India','Brazil'].map((n) => (
+                              <option key={n} value={n}>{n}</option>
+                            ))}
+                          </select>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className='text-center py-8'>
-                    <svg className='w-16 h-16 text-gray-300 mx-auto mb-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
-                    </svg>
-                    <p className='text-gray-500'>
-                      Search for flights to see price
-                    </p>
-                  </div>
-                )}
-
-                {/* Flight Summary */}
-                {showPrice && from && to && departDate && departTime && (
-                  <div className='mt-6 pt-6 border-t border-gray-200'>
-                    <h3 className='font-bold text-gray-800 mb-3'>Flight Summary</h3>
-                    <div className='bg-blue-50 rounded-lg p-4'>
-                      <div className='flex items-center gap-2 text-blue-900 mb-2'>
-                        <span className='font-bold'>{from}</span>
-                        <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M14 5l7 7m0 0l-7 7m7-7H3' />
+                      <button type='submit' className='w-full py-3.5 rounded-xl font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2'>
+                        <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 13l4 4L19 7' />
                         </svg>
-                        <span className='font-bold'>{to}</span>
-                      </div>
-                      <p className='text-sm text-gray-600'>
-                        <span className='font-medium'>Depart:</span> {formatDate(departDate)} at {formatTime(departTime)}
-                      </p>
-                      {flightType === 'roundtrip' && returnDate && returnTime && (
-                        <p className='text-sm text-gray-600 mt-1'>
-                          <span className='font-medium'>Return:</span> {formatDate(returnDate)} at {formatTime(returnTime)}
-                        </p>
-                      )}
-                      <p className='text-sm text-gray-600 mt-1'>
-                        {cabinClass.charAt(0).toUpperCase() + cabinClass.slice(1)} Class • {passengers} {passengers === 1 ? 'Passenger' : 'Passengers'}
-                      </p>
-                    </div>
+                        Confirm Booking
+                      </button>
+                    </form>
                   </div>
                 )}
               </div>
+
+              <div className='lg:col-span-1'>
+                <div className='bg-white rounded-2xl border border-slate-100 shadow-sm p-6 md:p-8 sticky top-24'>
+                  <h2 className='font-display text-lg font-bold text-navy-900 mb-5'>Trip Summary</h2>
+
+                  {showPrice && calculatedPrice ? (
+                    <div className='animate-fade-in'>
+                      {from && to && (
+                        <div className='bg-slate-50 rounded-xl p-4 mb-5'>
+                          <div className='flex items-center justify-between'>
+                            <span className='font-display font-bold text-navy-900 text-lg'>{from}</span>
+                            <svg className='w-5 h-5 text-gold-500' fill='currentColor' viewBox='0 0 24 24'>
+                              <path d='M21 16v-2l-8-5V3.5a1.5 1.5 0 00-1.5-1.5h-1A1.5 1.5 0 009 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z' />
+                            </svg>
+                            <span className='font-display font-bold text-navy-900 text-lg'>{to}</span>
+                          </div>
+                          <p className='text-xs text-slate-500 mt-2'>{formatDate(departDate)} · {formatTime(departTime)}</p>
+                          {flightType === 'roundtrip' && returnDate && (
+                            <p className='text-xs text-slate-500'>Return {formatDate(returnDate)} · {formatTime(returnTime)}</p>
+                          )}
+                          <p className='text-xs text-slate-500 mt-1 capitalize'>{cabinClass} · {passengers} pax</p>
+                        </div>
+                      )}
+                      <div className='space-y-3 text-sm'>
+                        <div className='flex justify-between'><span className='text-slate-500'>Base fare</span><span className='font-medium'>${calculatedPrice.subtotal}</span></div>
+                        <div className='flex justify-between'><span className='text-slate-500'>Taxes & fees</span><span className='font-medium'>${calculatedPrice.tax}</span></div>
+                        <div className='flex justify-between'><span className='text-slate-500'>Service fee</span><span className='font-medium'>${calculatedPrice.serviceFee}</span></div>
+                        <div className='border-t border-slate-100 pt-3 flex justify-between items-end'>
+                          <span className='font-semibold text-navy-900'>Total</span>
+                          <span className='font-display text-2xl font-bold text-gold-500'>${calculatedPrice.total}</span>
+                        </div>
+                      </div>
+                      <p className='text-xs text-slate-400 mt-3'>All taxes and fees included</p>
+                    </div>
+                  ) : (
+                    <div className='text-center py-10'>
+                      <div className='w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4'>
+                        <svg className='w-8 h-8 text-slate-300' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={1.5} d='M21 16v-2l-8-5V3.5a1.5 1.5 0 00-1.5-1.5h-1A1.5 1.5 0 009 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z' />
+                        </svg>
+                      </div>
+                      <p className='text-slate-500 text-sm'>Complete your search to see pricing</p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
       </section>
       <Footer />
     </>

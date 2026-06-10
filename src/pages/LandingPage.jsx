@@ -6,6 +6,7 @@ import About from '../sections/About'
 import Destinations from '../sections/Destinations'
 import WhyUs from '../sections/WhyUs'
 import Testimonials from '../sections/Testimonials'
+import CTA from '../sections/CTA'
 
 const LandingPage = () => {
   return (
@@ -16,6 +17,7 @@ const LandingPage = () => {
     <Destinations/>
     <WhyUs/>
     <Testimonials/>
+    <CTA/>
     <Footer/>
     </>
   )

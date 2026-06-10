@@ -1,45 +1,42 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-
+import FlightSearchWidget from '../components/FlightSearchWidget'
 
 const Hero = () => {
-  
   return (
-     <section id='home' className='hero-background pt-20 min-h-[calc(100vh-80px)] flex items-center text-white '>
-      <div className='overlay'></div>
+    <section id='home' className='hero-background relative pt-[4.5rem] min-h-screen flex items-center'>
+      <div className='hero-overlay' />
+      <div className='hero-grid' />
 
-      <div className='content max-w-6xl mx-auto px-6'>
-       
-        <h1 className='text-4xl md:text-5xl font-inter font-bold leading-normal'>
-          Comfort Safety And Global Reach 
-        </h1>
+      <div className='relative z-10 w-full max-w-7xl mx-auto px-5 md:px-8 py-12 md:py-16'>
+        <div className='grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center'>
+          <div>
+            <h1 className='animate-fade-up font-display text-4xl sm:text-5xl lg:text-[3.25rem] font-bold text-white leading-[1.15] tracking-tight'>
+              Where the world feels{' '}
+              <span className='text-transparent bg-clip-text bg-linear-to-r from-gold-400 to-gold-500'>
+                closer
+              </span>
+            </h1>
 
+            <p className='animate-fade-up animate-fade-up-delay-1 text-lg md:text-xl text-white max-w-lg mt-5 leading-relaxed'>
+              Every seat. A destination worth arriving to.
+            </p>
 
-        <h2 className='font-montserrat font-bold text-xl md:text-2xl mt-2 '>
-          Fly With <span className='text-yellow-500'>UP AIR</span> Airline
-        </h2>
+            <div className='animate-fade-up animate-fade-up-delay-2 flex flex-col sm:flex-row gap-3 mt-8 lg:hidden'>
+              <Link to='/booking' className='btn-primary text-center'>
+                Book a Flight
+              </Link>
+              <a href='#destinations' className='btn-outline text-center'>
+                Explore Destinations
+              </a>
+            </div>
+          </div>
 
-
-        <p className='font-inter text-lg md:text-xl text-blue-200 max-w-xl mt-4'>
-          Experience comfort, safety, and world class service on every flight
-        </p>
-
-
-        <div className='flex flex-col sm:flex-row gap-4 mt-8 font-inter'>
-
-          <Link to='/booking' className='bg-yellow-500 px-8 py-3 rounded-lg font-semibold text-center hover:bg-yellow-400 transition duration-300 text-gray-900'>
-             Book a Flight
-          </Link>
-
-          <a href='#destinations' className=' border-2 border-yellow-500 text-yellow-500
-          px-8 py-3 rounded-lg font-semibold hover:bg-yellow-500
-          hover:text-gray-900 transition duration-300 text-center'>
-             Explore Destination
-            </a>
-
-
+          <div className='animate-fade-up animate-fade-up-delay-2'>
+            <FlightSearchWidget compact />
+          </div>
         </div>
-      </div>  
+      </div>
     </section>
   )
 }
