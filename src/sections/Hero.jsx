@@ -1,5 +1,4 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
 import FlightSearchWidget from '../components/FlightSearchWidget'
 
 const Hero = () => {
@@ -19,17 +18,9 @@ const Hero = () => {
             </h1>
 
             <p className='animate-fade-up animate-fade-up-delay-1 text-lg md:text-xl text-white max-w-lg mt-5 leading-relaxed'>
-              Every seat. A destination worth arriving to.
+              Every seat. A destination worth the journey.
             </p>
 
-            <div className='animate-fade-up animate-fade-up-delay-2 flex flex-col sm:flex-row gap-3 mt-8 lg:hidden'>
-              <Link to='/booking' className='btn-primary text-center'>
-                Book a Flight
-              </Link>
-              <a href='#destinations' className='btn-outline text-center'>
-                Explore Destinations
-              </a>
-            </div>
           </div>
 
           <div className='animate-fade-up animate-fade-up-delay-2'>

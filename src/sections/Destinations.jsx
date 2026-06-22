@@ -8,20 +8,19 @@ import NewYork from '../assets/newyork.avif'
 
 const Destinations = () => {
   const destinations = [
-    { id: 1, city: 'Lagos', country: 'Nigeria', image: Nigeria, price: 380, tag: 'Popular' },
-    { id: 2, city: 'Beijing', country: 'China', image: China, price: 850, tag: 'Trending' },
-    { id: 3, city: 'London', country: 'United Kingdom', image: London, price: 500, tag: 'Classic' },
-    { id: 4, city: 'New York', country: 'USA', image: NewYork, price: 550, tag: 'Hot Deal' },
+    { id: 1, city: 'Lagos', country: 'Nigeria', image: Nigeria, price: 380, duration: '6h 20m' },
+    { id: 2, city: 'Beijing', country: 'China', image: China, price: 850, duration: '11h 45m' },
+    { id: 3, city: 'London', country: 'United Kingdom', image: London, price: 500, duration: '8h 30m' },
+    { id: 4, city: 'New York', country: 'USA', image: NewYork, price: 550, duration: '10h 15m' },
   ]
 
   return (
     <section id='destinations' className='py-20 md:py-28 bg-white'>
       <div className='max-w-7xl mx-auto px-5 md:px-8'>
         <SectionHeading
-          eyebrow='Explore'
           title='Popular'
           highlight='Destinations'
-          description='Handpicked routes with competitive fares. Your next adventure is one click away.'
+          description='Destinations'
           align='center'
         />
 
@@ -35,8 +34,11 @@ const Destinations = () => {
                   className='w-full h-full object-cover'
                 />
                 <div className='absolute inset-0 bg-linear-to-t from-navy-900/70 via-transparent to-transparent' />
-                <span className='absolute top-3 left-3 px-2.5 py-1 rounded-full bg-gold-400 text-navy-900 text-xs font-bold'>
-                  {dest.tag}
+                <span className='absolute top-3 left-3 px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-sm text-white text-xs font-medium flex items-center gap-1.5 border border-white/20'>
+                  <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
+                  </svg>
+                  {dest.duration}
                 </span>
                 <div className='absolute bottom-3 left-3 right-3'>
                   <h3 className='font-display text-xl font-bold text-white'>{dest.city}</h3>

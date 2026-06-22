@@ -55,7 +55,7 @@ const WhyUs = () => {
     {
       icon: IconPhone,
       title: 'Fast Booking',
-      description: 'Our intuitive booking flow gets you from search to seat in under two minutes — no hidden steps, no friction.',
+      description: 'Our intuitive booking flow gets you from search to seat in under two minutes, no hidden steps, no friction.',
     },
     {
       icon: IconShield,
@@ -78,10 +78,8 @@ const WhyUs = () => {
     <section id='whyus' className='py-20 md:py-28 bg-slate-50'>
       <div className='max-w-7xl mx-auto px-5 md:px-8'>
         <SectionHeading
-          eyebrow='Why UP AIR'
-          title='Built for travelers who'
-          highlight='expect more'
-          description='Every detail — from booking to boarding — is designed around your comfort and peace of mind.'
+          title='Why Travelers Choose'
+          highlight=' UP AIR'
         />
 
         <div className='grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6'>

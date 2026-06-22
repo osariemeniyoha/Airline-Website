@@ -73,10 +73,8 @@ const Testimonials = () => {
 
       <div className='relative max-w-7xl mx-auto px-5 md:px-8'>
         <SectionHeading
-          eyebrow='Testimonials'
-          title='Trusted by'
-          highlight='millions'
-          description='Real stories from travelers who chose UP AIR for their most important journeys.'
+          title='What Our'
+          highlight='Travelers Say'
           align='center'
           light
         />

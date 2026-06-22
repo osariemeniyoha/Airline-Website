@@ -248,6 +248,80 @@ body {
   display: none !important;
 }
 
+/* ── Stats strip ── */
+.stats-strip {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: linear-gradient(135deg, #0c1a2e 0%, #132744 60%, #1a3558 100%);
+  border-radius: 1rem;
+  padding: 2.5rem 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.stats-strip::before {
+  content: '';
+  position: absolute;
+  inset-x: 0;
+  top: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--color-gold-400), transparent);
+  opacity: 0.6;
+}
+
+.stats-strip::after {
+  content: '';
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 160px;
+  height: 160px;
+  background: radial-gradient(circle, rgba(245, 200, 66, 0.08), transparent 70%);
+  pointer-events: none;
+}
+
+.stats-strip-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  text-align: center;
+}
+
+/* Vertical dividers between items */
+.stats-strip-item + .stats-strip-item {
+  position: relative;
+}
+
+.stats-strip-item + .stats-strip-item::before {
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: 15%;
+  height: 70%;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(-50%);
+}
+
+@media (max-width: 640px) {
+  .stats-strip {
+    flex-wrap: wrap;
+    gap: 2rem 0;
+    padding: 2rem 1.5rem;
+  }
+
+  .stats-strip-item {
+    flex: 0 0 50%;
+  }
+
+  /* Hide dividers on mobile since items wrap */
+  .stats-strip-item + .stats-strip-item::before {
+    display: none;
+  }
+}
+
 /* ── Section patterns ── */
 .section-eyebrow {
   display: inline-flex;
