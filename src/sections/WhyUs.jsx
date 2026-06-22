@@ -1,5 +1,7 @@
 import React from 'react'
 import SectionHeading from '../components/SectionHeading'
+import { useScrollReveal } from '../hooks/useScrollReveal'
+
 
 const FeatureCard = ({ icon: Icon, title, description, index }) => {
   return (
@@ -27,6 +29,7 @@ const FeatureCard = ({ icon: Icon, title, description, index }) => {
 }
 
 const WhyUs = () => {
+   const { ref, inView } = useScrollReveal()
   const IconPhone = () => (
     <svg className='w-7 h-7' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
       <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='m10.051 8.102-3.778.322-1.994 1.994a.94.94 0 0 0 .533 1.6l2.698.316m8.39 1.617-.322 3.78-1.994 1.994a.94.94 0 0 1-1.595-.533l-.4-2.652m8.166-11.174a1.366 1.366 0 0 0-1.12-1.12c-1.616-.279-4.906-.623-6.38.853-1.671 1.672-5.211 8.015-6.31 10.023a.932.932 0 0 0 .162 1.111l.828.835.833.832a.932.932 0 0 0 1.111.163c2.008-1.102 8.35-4.642 10.021-6.312 1.475-1.478 1.133-4.77.855-6.385Zm-2.961 3.722a1.88 1.88 0 1 1-3.76 0 1.88 1.88 0 0 1 3.76 0Z' />
@@ -74,17 +77,21 @@ const WhyUs = () => {
     },
   ]
 
+
   return (
     <section id='whyus' className='py-20 md:py-28 bg-slate-50'>
       <div className='max-w-7xl mx-auto px-5 md:px-8'>
-        <SectionHeading
-          title='Why Travelers Choose'
-          highlight=' UP AIR'
-        />
+        <SectionHeading title='Why Travelers Choose' highlight=' UP AIR' />
 
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6'>
+        <div ref={ref} className='grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6'>
           {features.map((feature, index) => (
-            <FeatureCard key={index} {...feature} index={index} />
+            <div
+              key={index}
+              className={`transition-all duration-700 ${inView ? 'animate-slide-right' : 'opacity-0'}`}
+              style={{ animationDelay: `${index * 0.1}s` }}
+            >
+              <FeatureCard {...feature} index={index} />
+            </div>
           ))}
         </div>
       </div>

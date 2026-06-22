@@ -3,9 +3,9 @@ import FlightSearchWidget from '../components/FlightSearchWidget'
 
 const Hero = () => {
   return (
-    <section id='home' className='hero-background relative pt-[4.5rem] min-h-screen flex items-center'>
+    <section id='home' className='hero-background relative pt-18 min-h-screen flex items-center'>
       <div className='hero-overlay' />
-      <div className='hero-grid' />
+      
 
       <div className='relative z-10 w-full max-w-7xl mx-auto px-5 md:px-8 py-12 md:py-16'>
         <div className='grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center'>

@@ -25,8 +25,12 @@ const Destinations = () => {
         />
 
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'>
-          {destinations.map((dest) => (
-            <article key={dest.id} className='dest-card group bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm'>
+          {destinations.map((dest, index) => (
+              <article
+                key={dest.id}
+                className={`dest-card group bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm transition-all duration-500 opacity-0 animate-fade-up`}
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
               <div className='relative h-52 overflow-hidden'>
                 <img
                   src={dest.image}

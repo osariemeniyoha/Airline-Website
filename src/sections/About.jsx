@@ -1,5 +1,6 @@
 import React from 'react'
 import SectionHeading from '../components/SectionHeading'
+import { useScrollReveal } from '../hooks/useScrollReveal'
 
 const stats = [
   { number: '100+', title: 'Daily Flights' },
@@ -9,6 +10,8 @@ const stats = [
 ]
 
 const About = () => {
+  const { ref, inView } = useScrollReveal()
+
   return (
     <section id='about' className='py-20 md:py-28 bg-slate-50'>
       <div className='max-w-7xl mx-auto px-5 md:px-8'>
@@ -41,10 +44,17 @@ const About = () => {
           </div>
         </div>
 
-        {/* Stats strip — single dark bar, no cards */}
-        <div className='stats-strip'>
+      {/* Stats strip */}
+        <div
+          ref={ref}
+          className={`stats-strip ${inView ? 'animate-fade-up' : 'opacity-0'}`}
+        >
           {stats.map((stat, index) => (
-            <div key={index} className='stats-strip-item'>
+            <div
+              key={index}
+              className={`stats-strip-item opacity-0 ${inView ? 'animate-fade-up' : ''}`}
+              style={{ animationDelay: `${index * 0.12}s` }}
+            >
               <span className='font-display text-3xl md:text-4xl lg:text-5xl font-bold text-white'>
                 {stat.number}
               </span>
